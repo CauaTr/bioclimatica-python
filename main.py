@@ -13,5 +13,9 @@ while True:
     match opcao:
         case "1":
             informacoes_cultura = fc.selecionar_cultura()
+            print(informacoes_cultura)
+        case "4":
+            print("Programa Finalizado")
+            break
         case _:
             print("Opção Inválida, tente novamente!")
