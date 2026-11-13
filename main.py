@@ -41,25 +41,32 @@ while True:
     match opcao:
         #Selecionar cultura que o usuário está cultivando e salvar as informações sobre ela no dicionário 'informacoes_cultura'
         case "1":
-            informacoes_cultura = fc.selecionar_cultura()
-            print(f"Valores de análise ajustados para a seguinte cultura: {informacoes_cultura['nome']}")
-            input("Pressione Enter para continuar...")
-            contador = 0
-            os.system('cls')
+            try:
+                informacoes_cultura = fc.selecionar_cultura()
+                print(f"Valores de análise ajustados para a seguinte cultura: {informacoes_cultura['nome']}")
+                input("Pressione Enter para continuar...")
+                contador = 0
+                os.system('cls')
+            except Exception as e:
+                print(f"Erro: {e}")
+
         case "2":
-            informacoes_cidade = fc.selecionar_localidade()
-            nome_cidade = informacoes_cidade['nome']
-            print(f"Cidade Selecionada: {nome_cidade}")
-            input("Pressione Enter para continuar...")
-            contador = 0
-            url = "https://api.open-meteo.com/v1/forecast"
-            params = {
-                "latitude": informacoes_cidade['latitude'],
-                "longitude": informacoes_cidade['longitude'],
-                "hourly": ["temperature_2m", "rain"],
-                "timezone": "America/Sao_Paulo",
-            }
-            os.system('cls')
+            try:
+                informacoes_cidade = fc.selecionar_localidade()
+                nome_cidade = informacoes_cidade['nome']
+                print(f"Cidade Selecionada: {nome_cidade}")
+                input("Pressione Enter para continuar...")
+                contador = 0
+                url = "https://api.open-meteo.com/v1/forecast"
+                params = {
+                    "latitude": informacoes_cidade['latitude'],
+                    "longitude": informacoes_cidade['longitude'],
+                    "hourly": ["temperature_2m", "rain"],
+                    "timezone": "America/Sao_Paulo",
+                }
+                os.system('cls')
+            except Exception as e:
+                print(f"Erro: {e}")
         case '3':
             responses = openmeteo.weather_api(url, params = params)
             # Process first location. Add a for-loop for multiple locations or weather models
