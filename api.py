@@ -85,3 +85,5 @@ daily_data["temperature_2m_min"] = daily_temperature_2m_min
 
 daily_dataframe = pd.DataFrame(data = daily_data)
 print("\nDaily data\n", daily_dataframe)
+
+daily_dataframe.to_csv("dados.csv", index=False, encoding="utf-8")

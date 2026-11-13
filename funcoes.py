@@ -5,7 +5,7 @@ def selecionar_cultura() -> dict:
     cont = 0
     while True:
         if cont == 3:
-            os.system('clear')
+            os.system('cls')
             cont = 0
         cont += 1
         print("Selecione a cultura que está cultivando: ")
