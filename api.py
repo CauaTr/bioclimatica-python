@@ -15,7 +15,7 @@ url = "https://api.open-meteo.com/v1/forecast"
 params = {
 	"latitude": -23.5325,
 	"longitude": -46.7917,
-	"hourly": ["temperature_2m", "rain", "soil_temperature_6cm", "soil_moisture_3_to_9cm"],
+	"hourly": ["temperature_2m", "rain"],
 	"timezone": "America/Sao_Paulo",
 }
 responses = openmeteo.weather_api(url, params = params)
@@ -27,8 +27,6 @@ response = responses[0]
 hourly = response.Hourly()
 hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
 hourly_rain = hourly.Variables(1).ValuesAsNumpy()
-hourly_soil_temperature_6cm = hourly.Variables(2).ValuesAsNumpy()
-hourly_soil_moisture_3_to_9cm = hourly.Variables(3).ValuesAsNumpy()
 
 hourly_data = {
 	"date": pd.date_range(
@@ -41,10 +39,17 @@ hourly_data = {
 
 hourly_data["temperature_2m"] = hourly_temperature_2m
 hourly_data["rain"] = hourly_rain
-hourly_data["soil_temperature_6cm"] = hourly_soil_temperature_6cm
-hourly_data["soil_moisture_3_to_9cm"] = hourly_soil_moisture_3_to_9cm
 
 hourly_dataframe = pd.DataFrame(data = hourly_data)
 print("\nHourly data\n", hourly_dataframe)
 
-hourly_dataframe.to_csv("dados.csv", index=False, sep=",", encoding="utf-8")
+'''temperatura_max = 20
+temperatura_min = 15
+for c, i in enumerate(hourly_dataframe['temperature_2m']):
+    if i > temperatura_max or i < temperatura_min:
+        print(hourly_dataframe['date'][c])'''
+
+"""magos = hourly_dataframe['date'][1]
+print(magos)
+print(type(str(magos)))
+print('2026-11-13' in str(magos))"""

@@ -40,3 +40,37 @@ def selecionar_cultura() -> dict:
                 }
             case _:
                 print("Opção inválida!")
+
+def selecionar_localidade() -> dict:
+    cont = 0
+    while True:
+        if cont == 3:
+            os.system('cls')
+            cont = 0
+        cont += 1
+        print("Selecione qual localidade você quer colocar")
+        print("1 - Osasco")
+        print("2 - São Paulo")
+        print("3 - Guarulhos")
+        escolha = input("Digite o número correspondente à cultura: ")
+        match escolha:
+            case '1':
+                return {
+                    'nome' : 'Osasco',
+                    'latitude' : -23.5325,
+                    'longitude' : -46.7917
+                }
+            case '2':
+                return {
+                    'nome' : 'São Paulo',
+                    'latitude' : -23.5475,
+                    'longitude' : -46.6361
+                }
+            case '3':
+                return {
+                    'nome' : 'Guarulhos',
+                    'latitude' : -23.4628,
+                    'longitude' : -46.5333
+                }
+            case _:
+                print("Opção Inválida!")
