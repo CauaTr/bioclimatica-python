@@ -15,32 +15,13 @@ url = "https://api.open-meteo.com/v1/forecast"
 params = {
 	"latitude": -23.5325,
 	"longitude": -46.7917,
-	"daily": ["temperature_2m_max", "temperature_2m_min"],
 	"hourly": ["temperature_2m", "rain", "soil_temperature_6cm", "soil_moisture_3_to_9cm"],
-	"current": ["temperature_2m", "relative_humidity_2m", "rain", "apparent_temperature"],
 	"timezone": "America/Sao_Paulo",
 }
 responses = openmeteo.weather_api(url, params = params)
 
 # Process first location. Add a for-loop for multiple locations or weather models
 response = responses[0]
-print(f"Coordinates: {abs(response.Latitude())}°{'S' if response.Latitude() < 0 else 'N'} {abs(response.Longitude())}°{'W' if response.Longitude() < 0 else 'E'}")
-print(f"Elevation: {response.Elevation()} m asl")
-print(f"Timezone: {response.Timezone()}{response.TimezoneAbbreviation()}")
-print(f"Timezone difference to GMT+0: {response.UtcOffsetSeconds()}s")
-
-# Process current data. The order of variables needs to be the same as requested.
-current = response.Current()
-current_temperature_2m = current.Variables(0).Value()
-current_relative_humidity_2m = current.Variables(1).Value()
-current_rain = current.Variables(2).Value()
-current_apparent_temperature = current.Variables(3).Value()
-
-print(f"\nCurrent time: {current.Time()}")
-print(f"Current temperature_2m: {current_temperature_2m}")
-print(f"Current relative_humidity_2m: {current_relative_humidity_2m}")
-print(f"Current rain: {current_rain}")
-print(f"Current apparent_temperature: {current_apparent_temperature}")
 
 # Process hourly data. The order of variables needs to be the same as requested.
 hourly = response.Hourly()
@@ -66,24 +47,4 @@ hourly_data["soil_moisture_3_to_9cm"] = hourly_soil_moisture_3_to_9cm
 hourly_dataframe = pd.DataFrame(data = hourly_data)
 print("\nHourly data\n", hourly_dataframe)
 
-# Process daily data. The order of variables needs to be the same as requested.
-daily = response.Daily()
-daily_temperature_2m_max = daily.Variables(0).ValuesAsNumpy()
-daily_temperature_2m_min = daily.Variables(1).ValuesAsNumpy()
-
-daily_data = {
-	"date": pd.date_range(
-		start = pd.to_datetime(daily.Time(), unit = "s", utc = True),
-		end =  pd.to_datetime(daily.TimeEnd(), unit = "s", utc = True),
-		freq = pd.Timedelta(seconds = daily.Interval()),
-		inclusive = "left"
-	).tz_convert(response.Timezone().decode())
-}
-
-daily_data["temperature_2m_max"] = daily_temperature_2m_max
-daily_data["temperature_2m_min"] = daily_temperature_2m_min
-
-daily_dataframe = pd.DataFrame(data = daily_data)
-print("\nDaily data\n", daily_dataframe)
-
-daily_dataframe.to_csv("dados.csv", index=False, encoding="utf-8")
+hourly_dataframe.to_csv("dados.csv", index=False, sep=",", encoding="utf-8")

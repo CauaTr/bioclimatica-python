@@ -39,4 +39,4 @@ def selecionar_cultura() -> dict:
                     "chuva_ideal": (0, 5)
                 }
             case _:
-                print("Opção inválida. Por favor, selecione uma cultura válida.")
+                print("Opção inválida!")

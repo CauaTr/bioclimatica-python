@@ -19,6 +19,7 @@ while True:
     match opcao:
         case "1":
             informacoes_cultura = fc.selecionar_cultura()
+            print(f"Você está cultivando: {informacoes_cultura['nome']}")
         case "4":
             print("Programa Finalizado")
             break
