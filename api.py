@@ -41,14 +41,27 @@ hourly_data["temperature_2m"] = hourly_temperature_2m
 hourly_data["rain"] = hourly_rain
 
 hourly_dataframe = pd.DataFrame(data = hourly_data)
-print("\nHourly data\n", hourly_dataframe)
+#print("\nHourly data\n", hourly_dataframe)
 
-'''temperatura_max = 20
+temperatura_max = 20
 temperatura_min = 15
+normal = []
+acima = []
+abaixo = []
 for c, i in enumerate(hourly_dataframe['temperature_2m']):
-    if i > temperatura_max or i < temperatura_min:
-        print(hourly_dataframe['date'][c])'''
+    if i > temperatura_max:
+        acima.append(str(hourly_dataframe['date'][c])[0:10])
+        acima.append(str(hourly_dataframe['temperature_2m'][c]))
+    elif i < temperatura_min:
+        abaixo.append(str(hourly_dataframe['date'][c])[0:10])
+        abaixo.append(str(hourly_dataframe['temperature_2m'][c]))
+    else:
+        normal.append(str(hourly_dataframe['date'][c])[0:10])
+        normal.append(str(hourly_dataframe['temperature_2m'][c]))
 
+print(normal)
+print(acima)
+print(abaixo)
 """magos = hourly_dataframe['date'][1]
 print(magos)
 print(type(str(magos)))

@@ -13,7 +13,7 @@ openmeteo = openmeteo_requests.Client(session = retry_session)
 #Importação das Funções
 import funcoes as fc
 import os
-os.system('clear')
+os.system('cls')
 
 #Dicionário para guardar as informações das culturas no código
 informacoes_cultura = {}
@@ -21,6 +21,7 @@ informacoes_cidade = {}
 
 #Guarda o nome da cidade que está sendo analisada
 nome_cidade = 'Nenhuma'
+cultura_cultivada = 'Nenhuma'
 
 #Contador para limpar o terminal depois de uma certa quantidade de loops
 contador = 0
@@ -31,6 +32,7 @@ while True:
         os.system('cls')
         contador = 0
     print(f"Cidade sendo Analisada: {nome_cidade}")
+    print(f"Cultura sendo Cultivada: {cultura_cultivada}")
     print("\nSelecione uma opção:")
     print("1 - Selecionar cultura")
     print("2 - Selecionar Cidade Analisada")
@@ -46,6 +48,7 @@ while True:
                 print(f"Valores de análise ajustados para a seguinte cultura: {informacoes_cultura['nome']}")
                 input("Pressione Enter para continuar...")
                 contador = 0
+                cultura_cultivada = informacoes_cultura['nome']
                 os.system('cls')
             except Exception as e:
                 print(f"Erro: {e}")
@@ -58,7 +61,7 @@ while True:
                 input("Pressione Enter para continuar...")
                 contador = 0
                 url = "https://api.open-meteo.com/v1/forecast"
-                params = {
+                parametros = {
                     "latitude": informacoes_cidade['latitude'],
                     "longitude": informacoes_cidade['longitude'],
                     "hourly": ["temperature_2m", "rain"],
@@ -68,29 +71,37 @@ while True:
             except Exception as e:
                 print(f"Erro: {e}")
         case '3':
-            responses = openmeteo.weather_api(url, params = params)
-            # Process first location. Add a for-loop for multiple locations or weather models
-            response = responses[0]
+            if nome_cidade == 'Nenhuma':
+                print("Nenhuma Cidade foi selecionada para análise ainda!")
+                input("Pressione Enter para continuar...")
+                os.system('cls')
+            elif cultura_cultivada == 'Nenhuma':
+                print("Você ainda não selecionou a cultura que está cultivando!")
+                input("Pressione Enter para continuar...")
+                os.system('cls')
+            else:
+                print("Realizando Análise")
+                resposta = openmeteo.weather_api(url, params = parametros)
+                resposta = resposta[0]
 
-            # Process hourly data. The order of variables needs to be the same as requested.
-            hourly = response.Hourly()
-            hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
-            hourly_rain = hourly.Variables(1).ValuesAsNumpy()
+                dados_hora = resposta.Hourly()
+                temperatura = dados_hora.Variables(0).ValuesAsNumpy()
+                chuva = dados_hora.Variables(1).ValuesAsNumpy()
 
-            hourly_data = {
-                "date": pd.date_range(
-                    start = pd.to_datetime(hourly.Time(), unit = "s", utc = True),
-                    end =  pd.to_datetime(hourly.TimeEnd(), unit = "s", utc = True),
-                    freq = pd.Timedelta(seconds = hourly.Interval()),
-                    inclusive = "left"
-                ).tz_convert(response.Timezone().decode())
-            }
+                dados_diarios = {
+                    "date": pd.date_range(
+                        start = pd.to_datetime(dados_hora.Time(), unit = "s", utc = True),
+                        end =  pd.to_datetime(dados_hora.TimeEnd(), unit = "s", utc = True),
+                        freq = pd.Timedelta(seconds = dados_hora.Interval()),
+                        inclusive = "left"
+                    ).tz_convert(resposta.Timezone().decode())
+                }
 
-            hourly_data["temperature_2m"] = hourly_temperature_2m
-            hourly_data["rain"] = hourly_rain
+                dados_diarios["temperature_2m"] = temperatura
+                dados_diarios["rain"] = chuva
 
-            hourly_dataframe = pd.DataFrame(data = hourly_data)
-            print("\nHourly data\n", hourly_dataframe)
+                dataframe = pd.DataFrame(data = dados_diarios)
+                
         #Finalizar Programa
         case "5":
             print("Programa Finalizado")
