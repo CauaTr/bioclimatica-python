@@ -15,7 +15,8 @@ url = "https://api.open-meteo.com/v1/forecast"
 params = {
 	"latitude": -23.5325,
 	"longitude": -46.7917,
-	"hourly": ["temperature_2m", "rain"],
+	"daily": ["temperature_2m_max", "temperature_2m_min"],
+	"hourly": "rain",
 	"timezone": "America/Sao_Paulo",
 }
 responses = openmeteo.weather_api(url, params = params)
@@ -25,8 +26,7 @@ response = responses[0]
 
 # Process hourly data. The order of variables needs to be the same as requested.
 hourly = response.Hourly()
-hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
-hourly_rain = hourly.Variables(1).ValuesAsNumpy()
+hourly_rain = hourly.Variables(0).ValuesAsNumpy()
 
 hourly_data = {
 	"date": pd.date_range(
@@ -37,31 +37,31 @@ hourly_data = {
 	).tz_convert(response.Timezone().decode())
 }
 
-hourly_data["temperature_2m"] = hourly_temperature_2m
 hourly_data["rain"] = hourly_rain
 
 hourly_dataframe = pd.DataFrame(data = hourly_data)
-#print("\nHourly data\n", hourly_dataframe)
+print("\nHourly data\n", hourly_dataframe)
 
-temperatura_max = 20
-temperatura_min = 15
-normal = []
-acima = []
-abaixo = []
-for c, i in enumerate(hourly_dataframe['temperature_2m']):
-    if i > temperatura_max:
-        acima.append(str(hourly_dataframe['date'][c])[0:10])
-        acima.append(str(hourly_dataframe['temperature_2m'][c]))
-    elif i < temperatura_min:
-        abaixo.append(str(hourly_dataframe['date'][c])[0:10])
-        abaixo.append(str(hourly_dataframe['temperature_2m'][c]))
-    else:
-        normal.append(str(hourly_dataframe['date'][c])[0:10])
-        normal.append(str(hourly_dataframe['temperature_2m'][c]))
+# Process daily data. The order of variables needs to be the same as requested.
+daily = response.Daily()
+daily_temperature_2m_max = daily.Variables(0).ValuesAsNumpy()
+daily_temperature_2m_min = daily.Variables(1).ValuesAsNumpy()
 
-print(normal)
-print(acima)
-print(abaixo)
+daily_data = {
+	"date": pd.date_range(
+		start = pd.to_datetime(daily.Time(), unit = "s", utc = True),
+		end =  pd.to_datetime(daily.TimeEnd(), unit = "s", utc = True),
+		freq = pd.Timedelta(seconds = daily.Interval()),
+		inclusive = "left"
+	).tz_convert(response.Timezone().decode())
+}
+
+daily_data["temperature_2m_max"] = daily_temperature_2m_max
+daily_data["temperature_2m_min"] = daily_temperature_2m_min
+
+daily_dataframe = pd.DataFrame(data = daily_data)
+print("\nDaily data\n", daily_dataframe)
+
 """magos = hourly_dataframe['date'][1]
 print(magos)
 print(type(str(magos)))

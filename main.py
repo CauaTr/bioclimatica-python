@@ -64,7 +64,8 @@ while True:
                 parametros = {
                     "latitude": informacoes_cidade['latitude'],
                     "longitude": informacoes_cidade['longitude'],
-                    "hourly": ["temperature_2m", "rain"],
+                    "hourly": "rain",
+                    "daily" : ["temperature_2m_max", "temperature_2m_min"],
                     "timezone": "America/Sao_Paulo",
                 }
                 os.system('cls')
@@ -85,10 +86,14 @@ while True:
                 resposta = resposta[0]
 
                 dados_hora = resposta.Hourly()
-                temperatura = dados_hora.Variables(0).ValuesAsNumpy()
-                chuva = dados_hora.Variables(1).ValuesAsNumpy()
+                dados_diarios = resposta.Daily()
 
-                dados_diarios = {
+                chuva = dados_hora.Variables(0).ValuesAsNumpy()
+
+                temperatura_maxima = dados_diarios.Variables(0).ValuesAsNumpy()
+                temperatura_minima = dados_diarios.Variables(1).ValuesAsNumpy()
+
+                dados_chuva = {
                     "date": pd.date_range(
                         start = pd.to_datetime(dados_hora.Time(), unit = "s", utc = True),
                         end =  pd.to_datetime(dados_hora.TimeEnd(), unit = "s", utc = True),
@@ -97,11 +102,25 @@ while True:
                     ).tz_convert(resposta.Timezone().decode())
                 }
 
-                dados_diarios["temperature_2m"] = temperatura
-                dados_diarios["rain"] = chuva
+                dados_temperatura = {
+                    "date": pd.date_range(
+                        start = pd.to_datetime(dados_diarios.Time(), unit = "s", utc = True),
+                        end =  pd.to_datetime(dados_diarios.TimeEnd(), unit = "s", utc = True),
+                        freq = pd.Timedelta(seconds = dados_diarios.Interval()),
+                        inclusive = "left"
+                    ).tz_convert(resposta.Timezone().decode())
+                }
 
-                dataframe = pd.DataFrame(data = dados_diarios)
-                
+                dados_chuva["rain"] = chuva
+
+                dados_temperatura["temperature_2m_max"] = temperatura_maxima
+                dados_temperatura["temperature_2m_min"] = temperatura_minima
+
+                dataframe_chuva = pd.DataFrame(data = dados_chuva)
+                dataframe_temperatura = pd.DataFrame(data = dados_temperatura)
+
+                print("dados chuva:\n", dataframe_chuva)
+                print("dados temperatura:\n", dataframe_temperatura)
         #Finalizar Programa
         case "5":
             print("Programa Finalizado")
