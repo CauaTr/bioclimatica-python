@@ -72,66 +72,97 @@ while True:
             except Exception as e:
                 print(f"Erro: {e}")
         case '3':
-            if nome_cidade == 'Nenhuma':
-                print("Nenhuma Cidade foi selecionada para análise ainda!")
-                input("Pressione Enter para continuar...")
-                os.system('cls')
-            elif cultura_cultivada == 'Nenhuma':
-                print("Você ainda não selecionou a cultura que está cultivando!")
+            if fc.arquivo_existe_json("analise.json"): 
+                analise_realizada = False
+                from datetime import date
+                with open("analise.json", "r", encoding="utf-8") as ar:
+                    import json
+                    arquivo = json.load(ar)
+                    for c in arquivo:
+                        if c["data"] == fc.formatar_data(str(date.today())):
+                            analise_realizada = True
+                            ar.close()
+                        if analise_realizada:
+                            print("Você já realizou uma imagem hoje, verifique ela na opção 'Verificar Análises Feitas' no menu principal!")
+                            input("Pressione Enter para continuar...")
+                            os.system('cls')
+                            contador = 0
+                            continue
+            elif nome_cidade == 'Nenhuma' or cultura_cultivada == 'Nenhuma':
+                print("Selecione uma cultura e uma cidade antes de realizar uma análise!")
                 input("Pressione Enter para continuar...")
                 os.system('cls')
             else:
-                try:
-                    print("Realizando Análise")
-                    resposta = openmeteo.weather_api(url, params = parametros)
-                    resposta = resposta[0]
+                if fc.arquivo_existe_json("analise.json"): 
+                    analise_realizada = False
+                    from datetime import date
+                    with open("analise.json", "r", encoding="utf-8") as ar:
+                        import json
+                        arquivo = json.load(ar)
+                        for c in arquivo:
+                            if c["data"] == fc.formatar_data(str(date.today())):
+                                analise_realizada = True
+                                ar.close()
+                    if analise_realizada:
+                        print("Você já realizou uma imagem hoje, verifique ela na opção 'Verificar Análises Feitas' no menu principal!")
+                        input("Pressione Enter para continuar...")
+                        os.system('cls')
+                        contador = 0
+                        continue
+                else:
+                    try:
+                        print("Realizando Análise")
+                        resposta = openmeteo.weather_api(url, params = parametros)
+                        resposta = resposta[0]
 
-                    dados_hora = resposta.Hourly()
-                    dados_diarios = resposta.Daily()
+                        dados_hora = resposta.Hourly()
+                        dados_diarios = resposta.Daily()
 
-                    chuva = dados_hora.Variables(0).ValuesAsNumpy()
+                        chuva = dados_hora.Variables(0).ValuesAsNumpy()
 
-                    temperatura_maxima = dados_diarios.Variables(0).ValuesAsNumpy()
-                    temperatura_minima = dados_diarios.Variables(1).ValuesAsNumpy()
+                        temperatura_maxima = dados_diarios.Variables(0).ValuesAsNumpy()
+                        temperatura_minima = dados_diarios.Variables(1).ValuesAsNumpy()
 
-                    dados_chuva = {
-                        "date": pd.date_range(
-                            start = pd.to_datetime(dados_hora.Time(), unit = "s", utc = True),
-                            end =  pd.to_datetime(dados_hora.TimeEnd(), unit = "s", utc = True),
-                            freq = pd.Timedelta(seconds = dados_hora.Interval()),
-                            inclusive = "left"
-                        ).tz_convert(resposta.Timezone().decode())
-                    }
-
-                    dados_temperatura = {
-                        "date": pd.date_range(
-                            start = pd.to_datetime(dados_diarios.Time(), unit = "s", utc = True),
-                            end =  pd.to_datetime(dados_diarios.TimeEnd(), unit = "s", utc = True),
-                            freq = pd.Timedelta(seconds = dados_diarios.Interval()),
-                            inclusive = "left"
-                        ).tz_convert(resposta.Timezone().decode())
-                    }
-
-                    dados_chuva["rain"] = chuva
-
-                    dados_temperatura["temperature_2m_max"] = temperatura_maxima
-                    dados_temperatura["temperature_2m_min"] = temperatura_minima
-
-                    dataframe_chuva = pd.DataFrame(data = dados_chuva)
-                    dataframe_temperatura = pd.DataFrame(data = dados_temperatura)
-
-                    analises = {
-                        "data" : str(dataframe_temperatura["date"][0])[0:10],
-                        "analises" : fc.recolhimento_de_dados(dataframe_chuva, dataframe_temperatura, informacoes_cultura["temperatura_ideal"][0], informacoes_cultura["temperatura_ideal"][1])
+                        dados_chuva = {
+                            "date": pd.date_range(
+                                start = pd.to_datetime(dados_hora.Time(), unit = "s", utc = True),
+                                end =  pd.to_datetime(dados_hora.TimeEnd(), unit = "s", utc = True),
+                                freq = pd.Timedelta(seconds = dados_hora.Interval()),
+                                inclusive = "left"
+                            ).tz_convert(resposta.Timezone().decode())
                         }
-                    fc.add_json("teste.json", analises)
-                    print("Análises realizadas com sucesso!")
-                    print("Confira os resultados na aba 'Verificar Análises Feitas'")
-                    input("Pressione Enter para continuar...")
-                    contador = 0
-                    os.system('cls')
-                except Exception as e:
-                    print(f"Erro: {e}")
+
+                        dados_temperatura = {
+                            "date": pd.date_range(
+                                start = pd.to_datetime(dados_diarios.Time(), unit = "s", utc = True),
+                                end =  pd.to_datetime(dados_diarios.TimeEnd(), unit = "s", utc = True),
+                                freq = pd.Timedelta(seconds = dados_diarios.Interval()),
+                                inclusive = "left"
+                            ).tz_convert(resposta.Timezone().decode())
+                        }
+
+                        dados_chuva["rain"] = chuva
+
+                        dados_temperatura["temperature_2m_max"] = temperatura_maxima
+                        dados_temperatura["temperature_2m_min"] = temperatura_minima
+
+                        dataframe_chuva = pd.DataFrame(data = dados_chuva)
+                        dataframe_temperatura = pd.DataFrame(data = dados_temperatura)
+
+                        analises = {
+                            "data" : fc.formatar_data(str(dataframe_temperatura["date"][0])[0:10]),
+                            "analises" : fc.recolhimento_de_dados(dataframe_chuva, dataframe_temperatura, informacoes_cultura["temperatura_ideal"][0], informacoes_cultura["temperatura_ideal"][1])
+                            }
+                        fc.add_json("analise.json", analises)
+                        print("Análises realizadas com sucesso!")
+                        print("Confira os resultados na aba 'Verificar Análises Feitas'")
+                        input("Pressione Enter para continuar...")
+                        contador = 0
+                        os.system('cls')
+                    except Exception as e:
+                        print(f"Erro: {e}")
+        case "4":
+            print("Escolha a análise")
         #Finalizar Programa
         case "5":
             print("Programa Finalizado")

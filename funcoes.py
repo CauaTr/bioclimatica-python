@@ -118,11 +118,16 @@ def add_json(arquivo: str, dados: dict) -> None:
 
 def analisar_temperatura(temp_minima: float, temp_maxima: float, dataframe: str, contador: int) -> str:
     if float(str(dataframe["temperature_2m_max"][contador])) > temp_maxima:
-        return "Temperatura Maxima acima do ideal"
+        return [float(str(dataframe["temperature_2m_min"][contador])), float(str(dataframe["temperature_2m_max"][contador])), "Temperatura Maxima acima do ideal"]
     if float(str(dataframe["temperature_2m_min"][contador])) < temp_minima:
-        return "Temperatura Minima abaixo do ideal"
+        return [float(str(dataframe["temperature_2m_min"][contador])), float(str(dataframe["temperature_2m_max"][contador])), "Temperatura Minima abaixo do ideal"]
     if float(str(dataframe["temperature_2m_min"][contador])) > temp_minima and float(str(dataframe["temperature_2m_max"][contador])) < temp_maxima:
-        return "Temperatura Ideal"
+        return [float(str(dataframe["temperature_2m_min"][contador])), float(str(dataframe["temperature_2m_max"][contador])), "Temperatura Ideal"]
+
+def formatar_data(data: str) -> str:
+    separacao = data.split("-")
+    data_formatada = f"{separacao[2]}-{separacao[1]}-{separacao[0]}"
+    return data_formatada
 
 
 def recolhimento_de_dados(dataframe_hora: str, dataframe_dia: str, temp_minima:float, temp_maxima:float) -> dict:
@@ -159,11 +164,34 @@ def recolhimento_de_dados(dataframe_hora: str, dataframe_dia: str, temp_minima:f
 
     for c in range(0,7):
         dicionario_add = {
-            "data" : lista_datas[c],
+            "data" : formatar_data(lista_datas[c]),
             "hora" : numero[c][0],
             "chuva" : numero[c][1],
-            "temperatura" : lista_temperaturas[c]
+            "temp_maxima" : lista_temperaturas[c][1],
+            "temp_minima" : lista_temperaturas[c][0],
+            "situacao_temperatura" : lista_temperaturas[c][2]
         }
         dicionario_return[f"{c}"] = dicionario_add
 
     return dicionario_return
+
+def criar_escolhas(nome_arquivo: str, nome_campo: str) -> str:
+    lista_numeros = []
+    lista_nomes = []
+    import json
+    with open(f"{nome_arquivo}.json", "r", encoding="utf-8") as arquivo:
+        ar = json.load(arquivo)
+        for c, i in enumerate(ar):
+            print(f"{c+1} - {i[nome_campo]}")
+            lista_nomes.append(i[nome_campo])
+            lista_numeros.append(c+1)
+            while True:
+                try:
+                    escolha = int(input("Escolha: "))
+                    if escolha not in lista_numeros:
+                        print("Escolha Inválida!")
+                    else:
+                        return lista_nomes[escolha-1]
+                except ValueError:
+                    print("Erro, o valor não pode ser uma palavra!")
+                    continue
