@@ -81,46 +81,57 @@ while True:
                 input("Pressione Enter para continuar...")
                 os.system('cls')
             else:
-                print("Realizando Análise")
-                resposta = openmeteo.weather_api(url, params = parametros)
-                resposta = resposta[0]
+                try:
+                    print("Realizando Análise")
+                    resposta = openmeteo.weather_api(url, params = parametros)
+                    resposta = resposta[0]
 
-                dados_hora = resposta.Hourly()
-                dados_diarios = resposta.Daily()
+                    dados_hora = resposta.Hourly()
+                    dados_diarios = resposta.Daily()
 
-                chuva = dados_hora.Variables(0).ValuesAsNumpy()
+                    chuva = dados_hora.Variables(0).ValuesAsNumpy()
 
-                temperatura_maxima = dados_diarios.Variables(0).ValuesAsNumpy()
-                temperatura_minima = dados_diarios.Variables(1).ValuesAsNumpy()
+                    temperatura_maxima = dados_diarios.Variables(0).ValuesAsNumpy()
+                    temperatura_minima = dados_diarios.Variables(1).ValuesAsNumpy()
 
-                dados_chuva = {
-                    "date": pd.date_range(
-                        start = pd.to_datetime(dados_hora.Time(), unit = "s", utc = True),
-                        end =  pd.to_datetime(dados_hora.TimeEnd(), unit = "s", utc = True),
-                        freq = pd.Timedelta(seconds = dados_hora.Interval()),
-                        inclusive = "left"
-                    ).tz_convert(resposta.Timezone().decode())
-                }
+                    dados_chuva = {
+                        "date": pd.date_range(
+                            start = pd.to_datetime(dados_hora.Time(), unit = "s", utc = True),
+                            end =  pd.to_datetime(dados_hora.TimeEnd(), unit = "s", utc = True),
+                            freq = pd.Timedelta(seconds = dados_hora.Interval()),
+                            inclusive = "left"
+                        ).tz_convert(resposta.Timezone().decode())
+                    }
 
-                dados_temperatura = {
-                    "date": pd.date_range(
-                        start = pd.to_datetime(dados_diarios.Time(), unit = "s", utc = True),
-                        end =  pd.to_datetime(dados_diarios.TimeEnd(), unit = "s", utc = True),
-                        freq = pd.Timedelta(seconds = dados_diarios.Interval()),
-                        inclusive = "left"
-                    ).tz_convert(resposta.Timezone().decode())
-                }
+                    dados_temperatura = {
+                        "date": pd.date_range(
+                            start = pd.to_datetime(dados_diarios.Time(), unit = "s", utc = True),
+                            end =  pd.to_datetime(dados_diarios.TimeEnd(), unit = "s", utc = True),
+                            freq = pd.Timedelta(seconds = dados_diarios.Interval()),
+                            inclusive = "left"
+                        ).tz_convert(resposta.Timezone().decode())
+                    }
 
-                dados_chuva["rain"] = chuva
+                    dados_chuva["rain"] = chuva
 
-                dados_temperatura["temperature_2m_max"] = temperatura_maxima
-                dados_temperatura["temperature_2m_min"] = temperatura_minima
+                    dados_temperatura["temperature_2m_max"] = temperatura_maxima
+                    dados_temperatura["temperature_2m_min"] = temperatura_minima
 
-                dataframe_chuva = pd.DataFrame(data = dados_chuva)
-                dataframe_temperatura = pd.DataFrame(data = dados_temperatura)
+                    dataframe_chuva = pd.DataFrame(data = dados_chuva)
+                    dataframe_temperatura = pd.DataFrame(data = dados_temperatura)
 
-                print("dados chuva:\n", dataframe_chuva)
-                print("dados temperatura:\n", dataframe_temperatura)
+                    analises = {
+                        "data" : str(dataframe_temperatura["date"][0])[0:10],
+                        "analises" : fc.recolhimento_de_dados(dataframe_chuva, dataframe_temperatura, informacoes_cultura["temperatura_ideal"][0], informacoes_cultura["temperatura_ideal"][1])
+                        }
+                    fc.add_json("teste.json", analises)
+                    print("Análises realizadas com sucesso!")
+                    print("Confira os resultados na aba 'Verificar Análises Feitas'")
+                    input("Pressione Enter para continuar...")
+                    contador = 0
+                    os.system('cls')
+                except Exception as e:
+                    print(f"Erro: {e}")
         #Finalizar Programa
         case "5":
             print("Programa Finalizado")

@@ -3,6 +3,7 @@ import openmeteo_requests
 import pandas as pd
 import requests_cache
 from retry_requests import retry
+import funcoes as fc
 
 # Setup the Open-Meteo API client with cache and retry on error
 cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
@@ -40,8 +41,7 @@ hourly_data = {
 hourly_data["rain"] = hourly_rain
 
 hourly_dataframe = pd.DataFrame(data = hourly_data)
-print("\nHourly data\n", hourly_dataframe)
-
+#print("\nHourly data\n", hourly_dataframe)
 # Process daily data. The order of variables needs to be the same as requested.
 daily = response.Daily()
 daily_temperature_2m_max = daily.Variables(0).ValuesAsNumpy()
@@ -60,7 +60,49 @@ daily_data["temperature_2m_max"] = daily_temperature_2m_max
 daily_data["temperature_2m_min"] = daily_temperature_2m_min
 
 daily_dataframe = pd.DataFrame(data = daily_data)
-print("\nDaily data\n", daily_dataframe)
+
+temperatura_maxima = 30
+temperatura_minima = 15
+
+lista_temperaturas = []
+for c, i in enumerate(daily_dataframe['date']):
+		lista_temperaturas.append(fc.analisar_temperatura(temperatura_minima, temperatura_maxima, daily_dataframe, c))
+
+print(lista_temperaturas)
+
+'''lista = []
+lista_rain = []
+numeros = []
+data = ''
+contador = 0
+for c, i in enumerate(hourly_dataframe['date']):
+    if c == 0:
+        data = str(i)[0:10]
+    if str(i)[0:10] != data:
+        data = str(i)[0:10]
+    if data not in lista:
+        lista.append(data)
+    if lista[contador] in str(i) and c != len(hourly_dataframe['date'])-1:
+        if len(lista_rain) == 0:
+            lista_rain.append(str(hourly_dataframe['date'][c])) 
+            lista_rain.append(float(str(hourly_dataframe['rain'][c])))
+        else:
+            if float(str(hourly_dataframe['rain'][c])) > lista_rain[1]:
+                lista_rain[0] = str(i)[11:19]
+                lista_rain[1] = float(str(hourly_dataframe['rain'][c]))
+    else:
+        numeros.append(list(lista_rain))
+        lista_rain.clear()
+        contador += 1
+        lista_rain.append(str(hourly_dataframe['date'][c])[11:19])
+        lista_rain.append(float(str(hourly_dataframe['rain'][c])))
+
+print("Lista de Datas: ", lista)
+print("lista de Numeros: ", numeros)'''
+    
+        
+        
+		
 
 """magos = hourly_dataframe['date'][1]
 print(magos)
