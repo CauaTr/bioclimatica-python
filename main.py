@@ -12,6 +12,7 @@ openmeteo = openmeteo_requests.Client(session = retry_session)
 
 #Importação das Funções
 import funcoes as fc
+import json
 import os
 os.system('cls')
 
@@ -162,7 +163,58 @@ while True:
                     except Exception as e:
                         print(f"Erro: {e}")
         case "4":
-            print("Escolha a análise")
+            if nome_cidade == 'Nenhuma' or cultura_cultivada == 'Nenhuma':
+                print("Cidade e/ou Cultura ainda não selecionada, por favor faça sua seleção no menu principal")
+                input("Pressione Enter para continuar...")
+                contador = 0
+                os.system('cls')
+            elif not fc.arquivo_existe_json("analise.json"):
+                print("Nenhuma Análise foi realizada ainda, requisite uma análise da semana na opção 'Fazer Análise dessa semana' no menu principal")
+                input("Pressione Enter para continuar...")
+                contador = 0
+                os.system('cls')
+            else:
+                data = fc.criar_escolhas("analise", "data")
+                if data == "Cancelado":
+                    input("Pressione Enter para continuar...")
+                    os.system('cls')
+                    contador = 0
+                else:
+                    lista = fc.recolhe_keys("analise", data)
+                    with open(f"analise.json", "r", encoding="utf-8") as arquivo:
+                        ar = json.load(arquivo)
+                        while True:
+                            try:
+                                for c, i in enumerate(lista):
+                                    print(f"{c+1} - {fc.formatar_data(i)}")
+                                print("0 - Sair")
+                                escolha = int(input("Escolha: "))
+                                if escolha >= len(lista):
+                                    print("Escolha Inválida, tente novamente!")
+                                elif escolha == 0:
+                                    arquivo.close()
+                                    input("Pressione Enter para continuar...")
+                                    os.system('cls')
+                                    contador = 0
+                                    break
+                                else:
+                                    print(f"=== Análise do Dia {ar[0]["analises"][lista[escolha-1]]['data']} ===")
+                                    print(f"Temperatura Máxima: {ar[0]["analises"][lista[escolha-1]]['temp_maxima']}ºC")
+                                    print(f"Temperatura Mínima: {ar[0]["analises"][lista[escolha-1]]['temp_minima']}ºC")
+                                    print(f"{ar[0]["analises"][lista[escolha-1]]['situacao_temperatura']}")
+                                    print(f"Nível de Chuva: {ar[0]["analises"][lista[escolha-1]]['chuva']:.2} ({fc.nivel_chuva(ar[0]["analises"][lista[escolha-1]]['chuva'])})")
+                                    if fc.nivel_chuva(ar[0]["analises"][lista[escolha-1]]['chuva']) != "Sem chuva/chuva insignificante":
+                                        print(f"Horário de Pico da Chuva: {ar[0]["analises"][lista[escolha-1]]['hora']}")
+                                    if ar[0]["analises"][lista[escolha-1]]['chuva'] > informacoes_cultura['chuva_ideal']:
+                                        print(f"A intensidade da chuva coloca a plantação em risco")
+                                    else:
+                                        print(f"A chuva não oferece riscos a plantação")
+                                    continuar = input()
+                            except ValueError:
+                                print("Erro! A seleção não aceita nada além de números!")
+                                continue
+                            except Exception as e:
+                                print(f"Erro: {e}")
         #Finalizar Programa
         case "5":
             print("Programa Finalizado")

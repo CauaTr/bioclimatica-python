@@ -19,24 +19,21 @@ def selecionar_cultura() -> dict:
                 return {
                     "nome": "Alface",
                     "temperatura_ideal": (15, 20),
-                    "umidade_ideal": (60, 70),
-                    "chuva_ideal": (0, 5)
+                    "chuva_ideal": 5
                 }
             case "2":
                 print("Você selecionou Tomate Cereja.")
                 return {
                     "nome": "Tomate Cereja",
                     "temperatura_ideal": (18, 25),
-                    "umidade_ideal": (60, 80),
-                    "chuva_ideal": (0, 10)
+                    "chuva_ideal": 10
                 }
             case "3":
                 print("Você selecionou Cebolinha.")
                 return {
                     "nome": "Cebolinha",
                     "temperatura_ideal": (15, 25),
-                    "umidade_ideal": (50, 70),
-                    "chuva_ideal": (0, 5)
+                    "chuva_ideal": 5
                 }
             case _:
                 print("Opção inválida!")
@@ -118,11 +115,11 @@ def add_json(arquivo: str, dados: dict) -> None:
 
 def analisar_temperatura(temp_minima: float, temp_maxima: float, dataframe: str, contador: int) -> str:
     if float(str(dataframe["temperature_2m_max"][contador])) > temp_maxima:
-        return [float(str(dataframe["temperature_2m_min"][contador])), float(str(dataframe["temperature_2m_max"][contador])), "Temperatura Maxima acima do ideal"]
+        return [float(str(dataframe["temperature_2m_min"][contador])), float(str(dataframe["temperature_2m_max"][contador])), "A temperatura Maxima está acima do ideal"]
     if float(str(dataframe["temperature_2m_min"][contador])) < temp_minima:
-        return [float(str(dataframe["temperature_2m_min"][contador])), float(str(dataframe["temperature_2m_max"][contador])), "Temperatura Minima abaixo do ideal"]
+        return [float(str(dataframe["temperature_2m_min"][contador])), float(str(dataframe["temperature_2m_max"][contador])), "A temperatura Minima está abaixo do ideal"]
     if float(str(dataframe["temperature_2m_min"][contador])) > temp_minima and float(str(dataframe["temperature_2m_max"][contador])) < temp_maxima:
-        return [float(str(dataframe["temperature_2m_min"][contador])), float(str(dataframe["temperature_2m_max"][contador])), "Temperatura Ideal"]
+        return [float(str(dataframe["temperature_2m_min"][contador])), float(str(dataframe["temperature_2m_max"][contador])), "A temperatura está ideal"]
 
 def formatar_data(data: str) -> str:
     separacao = data.split("-")
@@ -171,7 +168,7 @@ def recolhimento_de_dados(dataframe_hora: str, dataframe_dia: str, temp_minima:f
             "temp_minima" : lista_temperaturas[c][0],
             "situacao_temperatura" : lista_temperaturas[c][2]
         }
-        dicionario_return[f"{c}"] = dicionario_add
+        dicionario_return[f"{lista_datas[c]}"] = dicionario_add
 
     return dicionario_return
 
@@ -181,17 +178,29 @@ def criar_escolhas(nome_arquivo: str, nome_campo: str) -> str:
     import json
     with open(f"{nome_arquivo}.json", "r", encoding="utf-8") as arquivo:
         ar = json.load(arquivo)
+        print("0 - Sair")
         for c, i in enumerate(ar):
             print(f"{c+1} - {i[nome_campo]}")
             lista_nomes.append(i[nome_campo])
             lista_numeros.append(c+1)
+            arquivo.close()
             while True:
                 try:
                     escolha = int(input("Escolha: "))
-                    if escolha not in lista_numeros:
-                        print("Escolha Inválida!")
+                    if escolha == 0:
+                        return "Cancelado"
+                    elif escolha not in lista_numeros:
+                        print("Escolha Inválida, tente novamente")
                     else:
                         return lista_nomes[escolha-1]
                 except ValueError:
                     print("Erro, o valor não pode ser uma palavra!")
                     continue
+
+def recolhe_keys(nome_arquivo: str, chave: str) -> list:
+    import json
+    with open(f"{nome_arquivo}.json", "r", encoding="utf-8") as arquivo:
+            ar = json.load(arquivo)
+            for c, i in enumerate(ar):
+                if i["data"] == chave:
+                    return list(i["analises"].keys())
