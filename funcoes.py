@@ -174,75 +174,107 @@ def formatar_data(data: str) -> str:
     data_formatada = f"{separacao[2]}-{separacao[1]}-{separacao[0]}"
     return data_formatada
 
-
+# Analisa todos 7 dias da semana, recolhe todas as informações necessárias para a análise, guarda todas elas em dicionários e retorna outro dicionário com todas elas 
 def recolhimento_de_dados(dataframe_hora: str, dataframe_dia: str, temp_minima:float, temp_maxima:float) -> dict:
-    dicionario_return = {}
-    lista_datas = []
-    lista_datas_add = []
-    lista_temperaturas = []
-    numero = []
-    data = ''
-    contador = 0
+    # Todas as variáveis que armazenarão as informações atribuidas a cada dia da semana
+    dicionario_return = {} # O dicionário que armazenará as informações de todas as análises e será retornado no final da execução da função
+    lista_datas = [] # A lista que armazenará todas as datas recolhidas pela análise
+    lista_horas_chuva_add = [] # Uma lista feita para recolher a data e o índice pluviométrico de uma data e adiconar esses dados à lista "lista_horas_chuva" em um loop
+    lista_temperaturas = [] # Uma lista onde ficam armazenadas as temperaturas (máximas e mínimas) de cada dia da semana
+    lista_horas_chuva = [] # A lista que armazena o pico dos índices pluviométricos de cada dia e a hora em que esse pico chega em cada um desses dias
+    data = '' # Uma variável para armazenar uma data, feita para fazer uma comparação no meio do loop
+    contador = 0 # Uma variável criada para avançar toda vez que o dia da semana troca dentro do loop
+
+    # Percorre a lista de dados diários para verificar o pico do índice pluviométrico de cada dia e em que hora do dia esse pico chega
     for c, i in enumerate(dataframe_hora['date']):
+        # Associa a data inicial à variável 'data' caso o loop esteja no início
         if c == 0:
             data = str(i)[0:10]
-        if str(i)[0:10] != data:
+
+        # Caso contrário, associa à variável 'data' a data que está presente no loop se elas forem diferentes
+        elif str(i)[0:10] != data:
             data = str(i)[0:10]
+
+        # Adiciona a data à lista 'lista_datas' caso ela ainda não tenha sido listada
         if data not in lista_datas:
             lista_datas.append(data)
+
+        # Enquanto a data retornada pelo loop permanecer a mesma, verifica qual hora do dia possui o maior índice pluviométrico
         if lista_datas[contador] in str(i) and c != len(dataframe_hora['date'])-1:
-            if len(lista_datas_add) == 0:
-                lista_datas_add.append(str(i)[11:19]) 
-                lista_datas_add.append(float(str(dataframe_hora['rain'][c])))
-            else:
-                if float(str(dataframe_hora['rain'][c])) > lista_datas_add[1]:
-                    lista_datas_add[0] = str(i)[11:19]
-                    lista_datas_add[1] = float(str(dataframe_hora['rain'][c]))            
+            # Se a lista 'lista_horas_chuva_add' estiver vazia, adiciona a data e o índice atuais
+            if len(lista_horas_chuva_add) == 0:
+                lista_horas_chuva_add.append(str(i)[11:19]) 
+                lista_horas_chuva_add.append(float(str(dataframe_hora['rain'][c])))
+
+            # Caso contrário, se o índice atual for maior do que o índice registrado na lista, substitui ambos a data e o índice pelos valores atuais
+            elif float(str(dataframe_hora['rain'][c])) > lista_horas_chuva_add[1]:
+                lista_horas_chuva_add[0] = str(i)[11:19]
+                lista_horas_chuva_add[1] = float(str(dataframe_hora['rain'][c]))
+
+        # Caso a data do loop mude, realiza os seguintes comandos:                
         else:
-            numero.append(list(lista_datas_add))
-            lista_datas_add.clear()
+            # Adiciona os valores da lista 'lista_horas_chuva_add' à lista 'lista_horas_chuva' e esvazia a primeira lista
+            lista_horas_chuva.append(list(lista_horas_chuva_add))
+            lista_horas_chuva_add.clear()
+
+            # Avança o contador para que a comparação pegue o próximo valor registrado na lista 'lista_datas'
             contador += 1
-            lista_datas_add.append(str(dataframe_hora['date'][c])[11:19]) 
-            lista_datas_add.append(float(str(dataframe_hora['rain'][c])))
+
+            # Adiciona os valores atuais à lista 'lista_horas_chuva_add', para evitar que o programa pule o primeiro valor quando for mudar a data analisada
+            lista_horas_chuva_add.append(str(dataframe_hora['date'][c])[11:19]) 
+            lista_horas_chuva_add.append(float(str(dataframe_hora['rain'][c])))
+
+    # Cria um loop que analisa todos os valores de temperatura e as datas do dataframe diário e armazena todos esse valores à lista 'lista_temperaturas'
     for c, i in enumerate(dataframe_dia['date']):
         lista_temperaturas.append(analisar_temperatura(temp_minima, temp_maxima, dataframe_dia, c))
 
+    # Gurada todos os valores coletados em dicionários diferentes e guarda cada um deles dentro do dicionário 'dicionario_return' associados à própria data como uma key
     for c in range(0,7):
         dicionario_add = {
             "data" : formatar_data(lista_datas[c]),
-            "hora" : numero[c][0],
-            "chuva" : numero[c][1],
+            "hora" : lista_horas_chuva[c][0],
+            "chuva" : lista_horas_chuva[c][1],
             "temp_maxima" : lista_temperaturas[c][1],
             "temp_minima" : lista_temperaturas[c][0],
             "situacao_temperatura" : lista_temperaturas[c][2]
         }
-        dicionario_return[f"{lista_datas[c]}"] = dicionario_add
+        dicionario_return[f"{formatar_data(lista_datas[c])}"] = dicionario_add
 
+    # Retorna o dicionário com todas as análises dos dias da semana
     return dicionario_return
 
+# Transforma todos os valores correspondentes a uma certa key, dentro de um arquivo json, em um menu de opções e retorna a escolha do usuário
 def criar_escolhas(nome_arquivo: str, nome_campo: str) -> str:
-    lista_numeros = []
+
+    # Cria 1 lista para armazenar os valores coletados
     lista_nomes = []
+
+    # Importa a biblioteca json
     import json
+
+    # Abre o arquivo Json
     with open(f"{nome_arquivo}.json", "r", encoding="utf-8") as arquivo:
         ar = json.load(arquivo)
+
+        # Percorre o arquivo e, ao mesmo tempo que armazena os achados dentro de uma lista, cria um menu de opções pra exibir ao usuário
         print("0 - Sair")
         for c, i in enumerate(ar):
             print(f"{c+1} - {i[nome_campo]}")
             lista_nomes.append(i[nome_campo])
-            lista_numeros.append(c+1)
             arquivo.close()
+
+            # Cria um loop e requisita uma resposta do usuário
             while True:
                 try:
                     escolha = int(input("Escolha: "))
                     if escolha == 0:
-                        return "Cancelado"
-                    elif escolha not in lista_numeros:
-                        print("Escolha Inválida, tente novamente")
+                        return "Cancelado" # Se o usuário responder '0', retorna uma string escrito "Cancelado", que será usada para cancelar a opção no programa principal
+                    elif escolha > len(lista_nomes):
+                        print("Escolha Inválida, tente novamente") # Se o usuário escolher uma opção que não está na lista, retorna uma mensagem de erro e requisita outra tentativa
                     else:
-                        return lista_nomes[escolha-1]
+                        return lista_nomes[escolha-1] # Caso nenhum erro ocorra, retorna o valor associado à escolha feita pelo usuário
                 except ValueError:
-                    print("Erro, o valor não pode ser uma palavra!")
+                    print("Erro, o valor não pode ser uma palavra!") # Se o usuário digitar uma letra, retorna uma mensagem de erro e requisita outra tentativa
                     continue
 
 # Recolhe as keys de um dicionário dentro de um arquivo json que estão associadas a uma certa data
@@ -255,7 +287,7 @@ def recolhe_keys(nome_arquivo: str, data: str) -> list:
     with open(f"{nome_arquivo}.json", "r", encoding="utf-8") as arquivo:
             ar = json.load(arquivo)
 
-            # Percorre todo o arquivo e, se encontrar uma data correspondente à informada, retorna todas as keys associadas à key 'analises'
+            # Percorre todo o arquivo e, se encontrar uma data correspondente à informada, retorna todas as keys associadas à key 'analises' em uma lista
             for c, i in enumerate(ar):
                 if i["data"] == data:
                     return list(i["analises"].keys())

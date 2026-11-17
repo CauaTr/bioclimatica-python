@@ -255,7 +255,7 @@ while True:
                                 print("Selecione o dia cujo as informações você deseja verificar:")
                                 # Transforma todas as datas da lista em uma lista de opções
                                 for c, i in enumerate(lista):
-                                    print(f"{c+1} - {fc.formatar_data(i)}")
+                                    print(f"{c+1} - {i}")
                                 print("0 - Sair")
                                 escolha = int(input("Escolha: "))
 
